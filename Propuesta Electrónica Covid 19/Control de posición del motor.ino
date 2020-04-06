@@ -1,26 +1,25 @@
 /********************************************************
 Descripción:
   El presente proyecto es una implementación didactica sobre el uso
-  del metodo de control de posición por PID en un motor DC, usando encoder incremental. 
+  del metodo de control de posición por PID en un motor DC para un ventilador mecánico. 
 CONEXIÓN::::::::::::::::::::::::::
 > ENCODER: (5V) 100PPR
   360grados = 400 pulsos
   0.9 grados / Pulso
   For better signal, we used a NOT TTL7404, for every channel.
   Remember that the output signal is 3.3V for the TTL microchip, and that is good for the ESP8266.
-> ESP8266: (5V USB) [Warning I/O 3.3v, doesn't matter if the USB is 5V]
   D1  = Channel A
   D2  = Channel B
   D8  = IN1 --L298N
   D7  = IN2 --L298N
-  D6 = PWM --L298N [10bit resolution ESP8266]
+  D6 = PWM --L298N
 > L298N (5v & 19v)
   IN1
   IN2
   In PWM 
 ***************************************************************************************************/
 #include <PID_v1.h>
-#include <TimerOne.h>  //timers only for ESP8266
+#include <TimerOne.h>  
 /*------------------------------Variebles-------------------------------*/
 int presion=A0;
 int presionValue=0;
@@ -123,7 +122,9 @@ void loop(){
   Serial.print("PWM  :");Serial.print(Output); 
   Serial.print(" |  contador  :");Serial.print(contador);
   Serial.print(" |  Setpoint  :");Serial.println(Setpoint);
-  
+  Serial.print(" |  Presión  :");Serial.println(p);
+  Serial.print(" |  Temperatura  :");Serial.println(t);
+  Serial.print(" |  Peso del paciente  :");Serial.println(peso);
 }
 /*------------------------------------------------------------------------------------------------*/
 
@@ -163,7 +164,7 @@ void input_data(void){
       t=((temp*5000)/1023)/10;
       h=p/(g*d);
       Vt=A*h*1000;
-      Vti=8*p/1000;
+      Vti=8*peso/1000;
       BPM=(Vti-Vt)/0.75;
       Setpoint=0;
       if (p <-2000){
@@ -204,25 +205,6 @@ void input_data(void){
     }
   }
 }
-
-// Print date in serial terminal
-//void imprimir(byte flag){ 
-
-  //if ((flag == 1) || (flag == 3))
-  //{
- //   Serial.print("KP=");     Serial.print(Kp);
- //   Serial.print(" KI=");    Serial.print(Ki);
- //   Serial.print(" KD=");    Serial.print(Kd);
- //   Serial.print(" Time=");  Serial.println(SampleTime);
- // }
- // if ((flag == 2) || (flag == 3))
-  //{
-  //  Serial.print("Position:");
-  //  Serial.println((long)Setpoint);
-//  }
-//}
-
-// Encoder x4. Execute when interruption pin jumps.
 void encoder(void){ 
   //Serial.println(ant);
   ant=act;                            // Saved act (current read) in ant (last read)
@@ -235,6 +217,7 @@ void encoder(void){
 
   // Enter the counter as input for PID algorith
   Input=contador;
+
 }
 
 void limit_post(void){
